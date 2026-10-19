@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Mis tareas</title>
+    <link rel="stylesheet" href="styles.css">
+  </head>
+  <body>
+    <header>
+      <h1>Gestor de tareas</h1>
+      <p>Interfaz de ejemplo para consumir una API Flask.</p>
+    </header>
+
+    <main>
+      <form id="task-form">
+        <h2 id="form-title">Crear tarea</h2>
+        <label for="title">Título</label>
+        <input id="title" name="title" required maxlength="100">
+
+        <label for="description">Descripción</label>
+        <textarea id="description" name="description" maxlength="500" rows="3"></textarea>
+
+        <label for="due-date">Fecha de entrega</label>
+        <input id="due-date" name="due_date" type="date">
+
+        <button type="submit">Guardar tarea</button>
+        <button id="cancel-button" type="button" hidden>Cancelar edición</button>
+      </form>
+
+      <p id="message" role="status" aria-live="polite"></p>
+      <section aria-labelledby="tasks-title">
+        <h2 id="tasks-title">Tareas guardadas</h2>
+        <div id="tasks"></div>
+      </section>
+    </main>
+    <script src="app.js"></script>
+  </body>
+</html>

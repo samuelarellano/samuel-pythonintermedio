@@ -1,0 +1,45 @@
+body {
+  font-family: system-ui, sans-serif;
+  line-height: 1.5;
+  margin: 0 auto;
+  max-width: 48rem;
+  padding: 1rem;
+}
+
+form,
+.task {
+  border: 1px solid #bbb;
+  border-radius: .5rem;
+  margin: 1rem 0;
+  padding: 1rem;
+}
+
+label {
+  display: block;
+  font-weight: 600;
+  margin-top: .75rem;
+}
+
+input,
+textarea,
+button {
+  box-sizing: border-box;
+  font: inherit;
+  margin-top: .25rem;
+  padding: .5rem;
+  width: 100%;
+}
+
+button {
+  background: #164e63;
+  color: white;
+  cursor: pointer;
+}
+
+.task h3 {
+  margin-top: 0;
+}
+
+.error {
+  color: #9b1c1c;
+}
