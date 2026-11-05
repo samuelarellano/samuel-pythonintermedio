@@ -1,0 +1,49 @@
+# Opcional: ejecutar con REST Client de VS Code u otro cliente compatible.
+# También puedes reproducir todos los casos en /docs sin instalar extensiones.
+# Los resultados esperados corresponden a la API terminada y los datos iniciales.
+@baseUrl = http://127.0.0.1:8000
+
+### Bienvenida: 200
+GET {{baseUrl}}/
+
+### Listado: 200, tres libros al iniciar
+GET {{baseUrl}}/libros
+
+### Query: 200, solo el libro con id 2
+GET {{baseUrl}}/libros?q=PYTHON&limite=1
+
+### Query sin coincidencias: 200, []
+GET {{baseUrl}}/libros?q=inexistente
+
+### Path: 200
+GET {{baseUrl}}/libros/2
+
+### Recurso inexistente: 404
+GET {{baseUrl}}/libros/999
+
+### Path inválido: 422, loc empieza con "path"
+GET {{baseUrl}}/libros/abc
+
+### Query inválida: 422, loc empieza con "query"
+GET {{baseUrl}}/libros?limite=0
+
+### Crear: 201, id 4 si es la primera creación
+POST {{baseUrl}}/libros
+Content-Type: application/json
+
+{"titulo": "Mi primer libro", "autor": "Ana", "paginas": 120}
+
+### Consultar el libro creado: 200 si ya ejecutaste la creación anterior
+GET {{baseUrl}}/libros/4
+
+### Body inválido: 422, loc señala "body" y "paginas"
+POST {{baseUrl}}/libros
+Content-Type: application/json
+
+{"titulo": "Mi primer libro", "autor": "Ana", "paginas": 0}
+
+### Falta un campo obligatorio: 422, loc señala "body" y "autor"
+POST {{baseUrl}}/libros
+Content-Type: application/json
+
+{"titulo": "Mi primer libro", "paginas": 120}

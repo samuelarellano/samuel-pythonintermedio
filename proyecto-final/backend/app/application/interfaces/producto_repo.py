@@ -1,0 +1,23 @@
+"""Contrato de puerto para el repositorio de Producto."""
+from typing import Protocol
+from ...domain.producto import Producto
+
+
+class IProductoRepository(Protocol):
+    """Protocolo de persistencia para productos."""
+
+    def crear(self, producto: Producto) -> Producto: ...
+    def obtener_por_id(self, producto_id: int, propietario_id: int) -> Producto | None: ...
+    def obtener_por_codigo(self, codigo: str, propietario_id: int) -> Producto | None: ...
+    def listar(
+        self,
+        propietario_id: int,
+        q: str | None = None,
+        categoria: str | None = None,
+        proveedor_id: int | None = None,
+        offset: int = 0,
+        limite: int = 20,
+    ) -> list[Producto]: ...
+    def actualizar(self, producto: Producto) -> Producto: ...
+    def eliminar(self, producto_id: int, propietario_id: int) -> bool: ...
+    def contar_por_proveedor(self, proveedor_id: int, propietario_id: int) -> int: ...

@@ -1,0 +1,65 @@
+# Ejecuta cada petición por separado. Puerto 8000: una sola etapa a la vez.
+@base = http://127.0.0.1:8000
+
+### Ambas etapas: bienvenida (200)
+GET {{base}}/
+
+### Ambas etapas: filtro y límite (200, Pan de elote)
+GET {{base}}/productos?q=pan&limite=1
+
+### Ambas etapas: límite inválido (422)
+GET {{base}}/productos?limite=0
+
+### Solo etapa 1: bebidas (200)
+GET {{base}}/bebidas
+
+### Solo etapa 2: bebidas (200)
+GET {{base}}/productos/bebidas
+
+### Etapa 2: producto (200)
+GET {{base}}/productos/1
+
+### Etapa 2: producto inexistente con los datos iniciales (404)
+GET {{base}}/productos/999
+
+### Etapa 2: id inválido (422)
+GET {{base}}/productos/0
+
+### Etapa 2: crear producto (201)
+POST {{base}}/productos
+Content-Type: application/json
+
+{"nombre": "Chocolate caliente", "categoria": "bebida", "precio_centavos": 4000}
+
+### Etapa 2: precio inválido (422)
+POST {{base}}/productos
+Content-Type: application/json
+
+{"nombre": "Chocolate", "categoria": "bebida", "precio_centavos": 0}
+
+### Etapa 2: crear pedido (201, total_centavos 7000)
+POST {{base}}/pedidos
+Content-Type: application/json
+
+{"producto_id": 1, "cantidad": 2}
+
+### Etapa 2: consultar pedidos (200)
+GET {{base}}/pedidos
+
+### Etapa 2: ejecutar después de crear el primer pedido (200)
+GET {{base}}/pedidos/1
+
+### Etapa 2: pedido inexistente con datos iniciales (404)
+GET {{base}}/pedidos/999
+
+### Etapa 2: producto inexistente (404)
+POST {{base}}/pedidos
+Content-Type: application/json
+
+{"producto_id": 999, "cantidad": 1}
+
+### Etapa 2: cantidad inválida (422)
+POST {{base}}/pedidos
+Content-Type: application/json
+
+{"producto_id": 1, "cantidad": 0}

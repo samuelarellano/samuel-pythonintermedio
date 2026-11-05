@@ -1,0 +1,290 @@
+### ==============================================================================
+### PETICIONES HTTP - LA ESTRELLITA (CATÁLOGO DE PROVEEDORES Y PRODUCTOS)
+### ==============================================================================
+### Archivo de pruebas HTTP manuales para clientes REST compatibles (ej. REST Client).
+### Se utilizan credenciales académicas de ejemplo. No almacena secretos reales.
+
+@base = http://127.0.0.1:8000
+@password_ejemplo = ContraseniaSegura2026!
+
+### ------------------------------------------------------------------------------
+### 1. SISTEMA Y LIVENESS
+### ------------------------------------------------------------------------------
+
+# @name comprobacionSalud
+GET {{base}}/salud
+Accept: application/json
+
+### ------------------------------------------------------------------------------
+### 2. AUTENTICACIÓN: REGISTRO Y LOGIN
+### ------------------------------------------------------------------------------
+
+# @name registroUsuarioA
+POST {{base}}/api/v1/auth/registro
+Content-Type: application/json
+
+{
+  "username": "comerciante_demo_a",
+  "password": "{{password_ejemplo}}"
+}
+
+###
+
+# @name registroUsuarioB
+POST {{base}}/api/v1/auth/registro
+Content-Type: application/json
+
+{
+  "username": "comerciante_demo_b",
+  "password": "{{password_ejemplo}}"
+}
+
+###
+
+# @name loginUsuarioA
+# El login exige application/x-www-form-urlencoded compatible con OAuth2
+POST {{base}}/api/v1/auth/token
+Content-Type: application/x-www-form-urlencoded
+
+username=comerciante_demo_a&password={{password_ejemplo}}
+
+### Guardar token de Usuario A en variable para peticiones posteriores:
+@token_a = {{loginUsuarioA.response.body.access_token}}
+
+###
+
+# @name loginUsuarioB
+POST {{base}}/api/v1/auth/token
+Content-Type: application/x-www-form-urlencoded
+
+username=comerciante_demo_b&password={{password_ejemplo}}
+
+@token_b = {{loginUsuarioB.response.body.access_token}}
+
+###
+
+# @name perfilUsuarioA
+GET {{base}}/api/v1/auth/yo
+Authorization: Bearer {{token_a}}
+Accept: application/json
+
+###
+
+# @name errorPerfilSinToken
+GET {{base}}/api/v1/auth/yo
+Accept: application/json
+
+### ------------------------------------------------------------------------------
+### 3. CATÁLOGO DE PROVEEDORES (USUARIO A)
+### ------------------------------------------------------------------------------
+
+# @name crearProveedorA
+POST {{base}}/api/v1/proveedores
+Authorization: Bearer {{token_a}}
+Content-Type: application/json
+
+{
+  "nombre": "Distribuidora Central de Abarrotes",
+  "contacto": "Juan Manuel Mendoza",
+  "telefono": "555-123-4567"
+}
+
+@id_prov_a = {{crearProveedorA.response.body.id}}
+
+###
+
+# @name listarProveedoresA
+GET {{base}}/api/v1/proveedores?offset=0&limite=10
+Authorization: Bearer {{token_a}}
+Accept: application/json
+
+###
+
+# @name buscarProveedorPorNombre
+GET {{base}}/api/v1/proveedores?q=Abarrotes
+Authorization: Bearer {{token_a}}
+Accept: application/json
+
+###
+
+# @name obtenerProveedorA
+GET {{base}}/api/v1/proveedores/{{id_prov_a}}
+Authorization: Bearer {{token_a}}
+Accept: application/json
+
+###
+
+# @name actualizarProveedorA
+PATCH {{base}}/api/v1/proveedores/{{id_prov_a}}
+Authorization: Bearer {{token_a}}
+Content-Type: application/json
+
+{
+  "telefono": "555-999-0000"
+}
+
+###
+
+# @name aislamientoUsuarioBNoVeProveedorDeA
+# Usuario B consulta sus proveedores y recibe lista vacía
+GET {{base}}/api/v1/proveedores
+Authorization: Bearer {{token_b}}
+Accept: application/json
+
+###
+
+# @name aislamientoUsuarioBIntentaConsultarProveedorDeA
+# Responde 404 Not Found (opacidad ante recursos ajenos)
+GET {{base}}/api/v1/proveedores/{{id_prov_a}}
+Authorization: Bearer {{token_b}}
+Accept: application/json
+
+### ------------------------------------------------------------------------------
+### 4. CATÁLOGO DE PRODUCTOS (USUARIO A)
+### ------------------------------------------------------------------------------
+
+# @name crearProductoA1
+POST {{base}}/api/v1/productos
+Authorization: Bearer {{token_a}}
+Content-Type: application/json
+
+{
+  "codigo": "AB-001",
+  "nombre": "Café de Grano Orgánico 500g",
+  "categoria": "Bebidas",
+  "precio_centavos": 14550,
+  "proveedor_id": {{id_prov_a}}
+}
+
+@id_prod_a = {{crearProductoA1.response.body.id}}
+
+###
+
+# @name crearProductoA2
+POST {{base}}/api/v1/productos
+Authorization: Bearer {{token_a}}
+Content-Type: application/json
+
+{
+  "codigo": "AB-002",
+  "nombre": "Harina de Trigo Extra Fina 1kg",
+  "categoria": "Abarrotes",
+  "precio_centavos": 2800,
+  "proveedor_id": {{id_prov_a}}
+}
+
+###
+
+# @name listarProductosConFiltros
+GET {{base}}/api/v1/productos?categoria=Bebidas&proveedor_id={{id_prov_a}}&offset=0&limite=10
+Authorization: Bearer {{token_a}}
+Accept: application/json
+
+###
+
+# @name obtenerProductoA
+GET {{base}}/api/v1/productos/{{id_prod_a}}
+Authorization: Bearer {{token_a}}
+Accept: application/json
+
+###
+
+# @name actualizarProductoPATCH
+PATCH {{base}}/api/v1/productos/{{id_prod_a}}
+Authorization: Bearer {{token_a}}
+Content-Type: application/json
+
+{
+  "precio_centavos": 15000
+}
+
+### ------------------------------------------------------------------------------
+### 5. INTEGRIDAD REFERENCIAL Y REGLAS DE NEGOCIO
+### ------------------------------------------------------------------------------
+
+# @name errorEliminarProveedorConProductos
+# Responde 409 Conflict porque tiene productos asociados
+DELETE {{base}}/api/v1/proveedores/{{id_prov_a}}
+Authorization: Bearer {{token_a}}
+
+###
+
+# @name errorCodigoProductoDuplicadoMismoUsuario
+# Responde 409 Conflict
+POST {{base}}/api/v1/productos
+Authorization: Bearer {{token_a}}
+Content-Type: application/json
+
+{
+  "codigo": "AB-001",
+  "nombre": "Intento Duplicado",
+  "categoria": "Test",
+  "precio_centavos": 1000,
+  "proveedor_id": {{id_prov_a}}
+}
+
+###
+
+# @name errorVincularProveedorAjeno
+# Usuario B intenta asociar un producto al proveedor de A -> Responde 404
+POST {{base}}/api/v1/productos
+Authorization: Bearer {{token_b}}
+Content-Type: application/json
+
+{
+  "codigo": "PROD-B1",
+  "nombre": "Producto B",
+  "categoria": "Test",
+  "precio_centavos": 1000,
+  "proveedor_id": {{id_prov_a}}
+}
+
+###
+
+# @name eliminarProductoPrimero
+DELETE {{base}}/api/v1/productos/{{id_prod_a}}
+Authorization: Bearer {{token_a}}
+
+### ------------------------------------------------------------------------------
+### 6. CASOS INVÁLIDOS Y CONTRATOS (422 / 401 / 404)
+### ------------------------------------------------------------------------------
+
+# @name errorPrecioCeroOFloat
+POST {{base}}/api/v1/productos
+Authorization: Bearer {{token_a}}
+Content-Type: application/json
+
+{
+  "codigo": "ERR-01",
+  "nombre": "Precio Cero",
+  "categoria": "Test",
+  "precio_centavos": 0,
+  "proveedor_id": {{id_prov_a}}
+}
+
+###
+
+# @name errorInyeccionPropietarioId
+POST {{base}}/api/v1/productos
+Authorization: Bearer {{token_a}}
+Content-Type: application/json
+
+{
+  "codigo": "ERR-02",
+  "nombre": "Inyeccion",
+  "categoria": "Test",
+  "precio_centavos": 1000,
+  "proveedor_id": {{id_prov_a}},
+  "propietario_id": 999
+}
+
+###
+
+# @name errorNullExplicitoEnPatch
+PATCH {{base}}/api/v1/proveedores/{{id_prov_a}}
+Authorization: Bearer {{token_a}}
+Content-Type: application/json
+
+{
+  "nombre": null
+}

@@ -1,0 +1,56 @@
+# Ejecutar por orden. Usuario de ejemplo; el registro repetido devuelve 409.
+@base = http://127.0.0.1:8000
+@token = PEGA_AQUI_ACCESS_TOKEN
+@id = 1
+
+### ¿El proceso responde? 200
+GET {{base}}/salud
+
+### Registro: 201, sin password ni hash en la respuesta
+POST {{base}}/auth/registro
+Content-Type: application/json
+
+{"username":"luna","password":"CieloDespejado2026!"}
+
+### Login: copiar access_token a la variable token, sin comillas
+POST {{base}}/auth/token
+Content-Type: application/x-www-form-urlencoded
+
+username=luna&password=CieloDespejado2026%21
+
+### Perfil: 200
+GET {{base}}/auth/yo
+Authorization: Bearer {{token}}
+
+### Crear: 201. Copiar id a la variable id
+POST {{base}}/observaciones
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{"objeto":"Saturno","notas":"Anillos visibles con telescopio"}
+
+### Listado privado y paginado: 200
+GET {{base}}/observaciones?q=Sat&offset=0&limite=20
+Authorization: Bearer {{token}}
+
+### Consulta individual: 200
+GET {{base}}/observaciones/{{id}}
+Authorization: Bearer {{token}}
+
+### Modificación parcial: 200
+PATCH {{base}}/observaciones/{{id}}
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{"notas":"Noche muy clara"}
+
+### Borrado: 204 sin cuerpo
+DELETE {{base}}/observaciones/{{id}}
+Authorization: Bearer {{token}}
+
+### ¿Qué ocurre sin token? 401
+GET {{base}}/observaciones
+
+### ¿Qué ocurre con límite inválido? 422
+GET {{base}}/observaciones?limite=0
+Authorization: Bearer {{token}}
